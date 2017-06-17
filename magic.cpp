@@ -60,10 +60,10 @@ void Initialize() {
 		Units[i].fLength = _UNIT_LENGTH;
 		Units[i].fHeight = _UNIT_LENGTH;
 		Units[i].fOrientation = GetRandomNumber(0, 360);
-		Units[i].CD.y = -0.12*Units[i].fLength; Units[i].CD.x = 0.0f;  // coordinates of the body center of drag
-        Units[i].CT.y = -0.50*Units[i].fLength; Units[i].CT.x = 0.0f;  // coordinates of the propeller thrust vector
-        Units[i].CPT.y = 0.5*Units[i].fLength; Units[i].CPT.x = -0.5*Units[i].fWidth; // coordinates of the port bow thruster
-        Units[i].CST.y = 0.5*Units[i].fLength; Units[i].CST.x = 0.5*Units[i].fWidth; // coordinates of the starboard bow thruster
+		Units[i].CD.y = -0.12f*Units[i].fLength; Units[i].CD.x = 0.0f;  // coordinates of the body center of drag
+        Units[i].CT.y = -0.50f*Units[i].fLength; Units[i].CT.x = 0.0f;  // coordinates of the propeller thrust vector
+        Units[i].CPT.y = 0.5f*Units[i].fLength; Units[i].CPT.x = -0.5f*Units[i].fWidth; // coordinates of the port bow thruster
+        Units[i].CST.y = 0.5f*Units[i].fLength; Units[i].CST.x = 0.5f*Units[i].fWidth; // coordinates of the starboard bow thruster
 
 		Units[i].ProjectedArea = (Units[i].fLength + Units[i].fWidth) * Units[i].fHeight;
 
@@ -309,7 +309,7 @@ void UpdateSimulation(int _) {
 				Units[i].vPosition.y = GetRandomNumber(_WINHEIGHT/2-_SPAWN_AREA_R, _WINHEIGHT/2+_SPAWN_AREA_R);
 				Units[i].HitPoints = _MAXHITPOINTS/2.0;
 //				if(Units[i].Command == chase)
-					ReTrainTheBrain(Units[i], 0.1, 0.1, 0.9);
+					ReTrainTheBrain(Units[i], 0.1, 0.4, 0.9);
 			}
 		} else {
 			Units[i].HitPoints = std::min(Units[i].HitPoints+0.01, _MAXHITPOINTS);
@@ -369,10 +369,30 @@ void DrawLine(float a, float b, float c, float d) {
 }
 
 void drawCircle(float x, float y, float r){
-    const int nvertex = 15;
+    const int nLines = 15;
     glBegin(GL_LINES);
-    for(double i = 0; i < 2 * M_PI; i += M_PI / nvertex)
-        glVertex2f(x+cos(i) * r, y+sin(i) * r);
+    for(float i = 0; i < 2*pi; i += 2*pi / nLines) {
+        float x0 = x + cosf(i) * r;
+        float y0 = y + sinf(i) * r;
+        float x1 = x + cosf(i+pi / nLines) * r;
+        float y1 = y + sinf(i+pi / nLines) * r;
+        if(x0 > _WINWIDTH){
+            x0 -= _WINWIDTH;
+            x1 -= _WINWIDTH;
+        } if (x0 < 0){
+            x0 += _WINWIDTH;
+            x1 += _WINWIDTH;
+        }
+        if(y0 > _WINHEIGHT){
+            y0 -= _WINHEIGHT;
+            y1 -= _WINHEIGHT;
+        } else if(y0 < 0){
+            y0 += _WINHEIGHT;
+            y1 += _WINHEIGHT;
+        }
+        glVertex2f(x0, y0);
+        glVertex2f(x1, y1);
+    }
     glEnd();
 }
 
