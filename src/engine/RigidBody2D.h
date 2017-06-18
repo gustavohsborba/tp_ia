@@ -9,7 +9,7 @@
 #define  _LINEARDRAGCOEFFICIENT		10.5f
 #define  _ANGULARDRAGCOEFFICIENT	2000.0f
 
-
+#define NEURAL_INPUTS 4
 
 //------------------------------------------------------------------------//
 // Rigid body structure (2D only)
@@ -61,7 +61,7 @@ public:
 	bool	Flock;
 	bool	Evade;
 
-	double	Inputs[6];
+	double	Inputs[NEURAL_INPUTS];
 
 };
 

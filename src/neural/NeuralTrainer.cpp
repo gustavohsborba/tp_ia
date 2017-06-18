@@ -1,4 +1,5 @@
 #include "NeuralTrainer.h"
+#include "../engine/RigidBody2D.h"
 
 NeuralNetwork theBrain;
 

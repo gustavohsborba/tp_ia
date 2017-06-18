@@ -3,8 +3,6 @@
 
 #include "NeuralNetwork.h"
 
-#define NEURAL_INPUTS 4
-
 extern NeuralNetwork theBrain;
 
 void initializeTheBrain();
