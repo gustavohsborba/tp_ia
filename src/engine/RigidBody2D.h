@@ -9,7 +9,7 @@
 #define  _LINEARDRAGCOEFFICIENT		10.5f
 #define  _ANGULARDRAGCOEFFICIENT	2000.0f
 
-#define NEURAL_INPUTS 4
+#define NEURAL_INPUTS 6
 
 //------------------------------------------------------------------------//
 // Rigid body structure (2D only)

@@ -39,9 +39,7 @@ void trainTheBrain() {
             theBrain.setInput(4, TrainingSet[i][4]);
             theBrain.setInput(5, TrainingSet[i][5]);
 
-
-            for(int j=0; j<theBrain.nNodesOutput; j++)
-            theBrain.setDesiredOutput(j, TrainingSet[i][6]);
+            theBrain.setDesiredOutput(0, TrainingSet[i][6]);
             theBrain.setDesiredOutput(1, TrainingSet[i][7]);
             theBrain.setDesiredOutput(2, TrainingSet[i][8]);
 
