@@ -13,7 +13,7 @@
 #define _TIMESTEP 0.0045
 #define _SPAWN_AREA_R 300
 
-#define _MAX_NUM_UNITS 22
+#define _MAX_NUM_UNITS 2
 
 #define _UNIT_LENGTH 4
 
@@ -34,6 +34,8 @@ double damageRate = 0.4;
 bool showVectors=false;
 bool showField=true;
 
+int livingUnits;
+
 int GetRandomNumber(int min, int max) {
     int	number;
     number = (((abs(rand())%(max-min+1))+min));
@@ -52,7 +54,8 @@ Vector minWrapVector(Vector a, Vector b){
 
 void initialize() {
     srand((unsigned) time(NULL));
-	for(int i=0; i<_MAX_NUM_UNITS; i++) {
+    livingUnits = _MAX_NUM_UNITS;
+	for(int i=0; i<livingUnits; i++) {
 		Units[i].fMass = 10;
 		Units[i].fInertia = 10;
 		Units[i].vPosition.x = GetRandomNumber(_WINWIDTH/2-_SPAWN_AREA_R, _WINWIDTH/2+_SPAWN_AREA_R);
@@ -90,6 +93,7 @@ void initialize() {
 
 void Finalize() {
     endBrain();
+    exit(0);
 }
 
 void DoUnitAI(int i) {
@@ -109,7 +113,7 @@ void DoUnitAI(int i) {
 		nProximos = 0;
         Units[i].NumFriends = 0;
 		
-		for(int j=1; j<_MAX_NUM_UNITS; j++) {
+		for(int j=1; j<livingUnits; j++) {
 			if(i!=j) {
 				d = minWrapVector(Units[j].vPosition, Units[i].vPosition);
 				w = VRotate2D(-Units[i].fOrientation, d);
@@ -204,7 +208,6 @@ void DoUnitAI(int i) {
 void updateSimulation(int _) {
     glutTimerFunc(20, updateSimulation, 0);
 	double dt = _TIMESTEP;
-	int i;
 	Vector u;
 	bool kill = false;
 	
@@ -214,7 +217,6 @@ void updateSimulation(int _) {
 
     if(isKeyDownNow(27)) { //esc
         Finalize();
-        exit(0);
     }
     if (isKeyDownNow('v')) {
         showVectors = !showVectors;
@@ -254,15 +256,13 @@ void updateSimulation(int _) {
 
 	Units[0].UpdateBodyEuler(dt);
 
-	if(Units[0].vPosition.x > _WINWIDTH) Units[0].vPosition.x = 0;
-	if(Units[0].vPosition.x < 0) Units[0].vPosition.x = _WINWIDTH;
-	if(Units[0].vPosition.y > _WINHEIGHT) Units[0].vPosition.y = 0;
-	if(Units[0].vPosition.y < 0) Units[0].vPosition.y = _WINHEIGHT;
+    Units[0].vPosition.x = std::max(0.0f, std::min((float)_WINWIDTH, Units[0].vPosition.x));
+    Units[0].vPosition.y = std::max(0.0f, std::min((float)_WINHEIGHT, Units[0].vPosition.y));
 
 	// calc number of enemy units currently engaging the target
 	Vector d;
 	Units[0].NumFriends = 0;
-	for(i=1; i<_MAX_NUM_UNITS; i++) {	
+	for(int i=1; i<livingUnits; i++) {
 		d = minWrapVector(Units[i].vPosition, Units[0].vPosition);
 		if(d.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) {
             Units[0].NumFriends++;
@@ -286,12 +286,12 @@ void updateSimulation(int _) {
     static double lastHitpoints = -1;
     if(lastHitpoints != Units[0].HitPoints){
         lastHitpoints = Units[0].HitPoints;
-        printf("player hitpoints: %.0lf\n", Units[0].HitPoints);
+        printf("player hitpoints: %.2lf\n", Units[0].HitPoints);
     }
 
 	
 	// update computer controlled units:	
-	for(i=1; i<_MAX_NUM_UNITS; i++) {		
+	for(int i=1; i<livingUnits; i++) {
 		u = minWrapVector(Units[0].vPosition, Units[i].vPosition);
 		if(kill) {				
 			if((u.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) /*&& (Units[i].Command != 2)*/) {
@@ -305,11 +305,14 @@ void updateSimulation(int _) {
 		if(u.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) {
 			Units[i].HitPoints -= damageRate;
 			if((Units[i].HitPoints < 0)) {
-                printf("player matou inimigo\n");
-				Units[i].vPosition.x = GetRandomNumber(_WINWIDTH/2-_SPAWN_AREA_R, _WINWIDTH/2+_SPAWN_AREA_R);
-				Units[i].vPosition.y = GetRandomNumber(_WINHEIGHT/2-_SPAWN_AREA_R, _WINHEIGHT/2+_SPAWN_AREA_R);
-				Units[i].HitPoints = _MAXHITPOINTS/2.0;
-//				if(Units[i].Command == chase)
+                printf("player killed an enemy\n");
+                livingUnits -= 1;
+                if(livingUnits > 1) {
+                    Units[i] = Units[livingUnits];
+                } else {
+                    Finalize();
+                }
+
                 reTrainTheBrain(Units[i], 0.1, 0.2, 0.9);
 			}
 		} else {
@@ -317,7 +320,7 @@ void updateSimulation(int _) {
 		}
 
 		// get a new command
-		Units[i].Inputs[0] = Units[i].NumFriends/_MAX_NUM_UNITS;
+		Units[i].Inputs[0] = (float)Units[i].NumFriends/livingUnits;
 		Units[i].Inputs[1] = (double) (Units[i].HitPoints/_MAXHITPOINTS);
 		Units[i].Inputs[2] = (Units[0].NumFriends>0 ? 1:0);
 		Units[i].Inputs[3] = (u.magnitude()/800.0f);
@@ -476,7 +479,7 @@ void DrawCraft(RigidBody2D craft, Cor clr) {
 void drawCrafts() {
 	glClearColor(.1,.1,.1,1);
     glClear(GL_COLOR_BUFFER_BIT);
-    for (int i = 0; i < _MAX_NUM_UNITS; i++) {
+    for (int i = 0; i < livingUnits; i++) {
         if (i == 0) {
             DrawCraft(Units[i], Cor(255, 255, 255));
         } else if (Units[i].Command == chase)
