@@ -1,4 +1,5 @@
 #include "NeuralTrainer.h"
+#include "../engine/RigidBody2D.h"
 
 NeuralNetwork theBrain;
 
@@ -53,17 +54,17 @@ void trainTheBrain() {
     theBrain.dumpData("PostTraining.txt");
 }
 
-void reTrainTheBrain(const RigidBody2D &unit, double d0, double d1, double d2) {
+void reTrainTheBrain(const double inputs[], double d0, double d1, double d2) {
     double	error = 1;
     int		c = 0;
 
     while((error > 0.1) && (c<5000)) {
 
         c++;
-        theBrain.setInput(0, unit.Inputs[0]);
-        theBrain.setInput(1, unit.Inputs[1]);
-        theBrain.setInput(2, unit.Inputs[2]);
-        theBrain.setInput(3, unit.Inputs[3]);
+        theBrain.setInput(0, inputs[0]);
+        theBrain.setInput(1, inputs[1]);
+        theBrain.setInput(2, inputs[2]);
+        theBrain.setInput(3, inputs[3]);
         theBrain.setDesiredOutput(0, d0);
         theBrain.setDesiredOutput(1, d1);
         theBrain.setDesiredOutput(2, d2);
@@ -75,7 +76,7 @@ void reTrainTheBrain(const RigidBody2D &unit, double d0, double d1, double d2) {
 }
 
 void initializeTheBrain() {
-    theBrain.initialize(4, 3, 3);
+    theBrain.initialize(NEURAL_INPUTS, 3, 3);
     theBrain.setLearningRate(0.2);
     theBrain.setMomentum(true, 0.9);
 }

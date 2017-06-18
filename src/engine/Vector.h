@@ -51,4 +51,6 @@ Vector operator/(Vector u, float s);
 Vector minWrapVector(Vector p, Vector q, float maxW, float maxH);
 Vector VRotate2D(float angle, Vector u);
 
+Vector getWrapPosition(Vector v, float maxW, float maxH);
+
 #endif
