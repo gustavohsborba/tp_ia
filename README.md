@@ -13,7 +13,7 @@ baseado no exemplo 14 do livro 'AI For Game Developers - David M. Bourg, Glenn S
  -     [X] Colocar os hitpoints do Unit[0] como entrada da rede neural
  -     [ ] Preparar o texto
  -     [ ] Preparar a apresentacao
- -     [ ] Re treinar a rede neural a cada período de tempo, e não só quando um cara morre.
+ -     [X] Re treinar a rede neural a cada período de tempo, e não só quando um cara morre.
  
  ## EXTRAS: 
  -     [ ] Colocar menu, menu de pausa e tela de 'voce ganhou'

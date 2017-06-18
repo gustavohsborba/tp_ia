@@ -108,7 +108,7 @@ void setDamageRate(double val){
 
 void initialize() {
     srand((unsigned) time(NULL));
-    livingUnits = _MAX_NUM_UNITS;
+    livingUnits = _MAX_NUM_UNITS - 1;
 	for(int i=0; i<livingUnits; i++) {
 		Units[i].fMass = 10;
 		Units[i].fInertia = 10;
