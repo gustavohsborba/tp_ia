@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <time.h>
 #include <algorithm>
+#include <string>
 #include <cmath>
 #include <stdlib.h>
 #include <cstring>
@@ -15,7 +16,7 @@
 #define _TIMESTEP 0.0045
 #define _SPAWN_AREA_R 300
 
-#define _MAX_NUM_UNITS 22
+#define _MAX_NUM_UNITS 2
 
 #define _UNIT_LENGTH 4
 
@@ -39,6 +40,9 @@ double aiDamage = 0.2;
 bool showVectors=false;
 bool showField=true;
 
+// ESTADO EXECUCAO: 1=Rodando, 2=Pausado, 3=Finalizado
+int estadoExecucao = 1;
+
 int livingUnits;
 
 float playerDamageBalance = 0.0f;
@@ -53,6 +57,36 @@ int GetRandomNumber(int min, int max) {
         number = min;
     }
     return number;
+}
+
+void popup(const char *texto){
+    const int x=3*_WINWIDTH/8,w=_WINWIDTH/4,y=3*_WINWIDTH/8,h=_WINWIDTH/4;
+    glColor3ub(63,127,63);
+    glBegin(GL_QUADS);
+    glVertex2i(x,y);
+    glVertex2i(x,y+h);
+    glVertex2i(x+w,y+h);
+    glVertex2i(x+w,y);
+    glEnd();
+
+    int linha=2;
+    int coluna=4;
+    int i;
+    glColor3ub(255,255,255);
+    for(i=0;i<strlen(texto);++i){
+        glRasterPos2i(x+coluna*9, y+linha*15);
+        if(texto[i] == '\n'){
+            ++linha;
+            coluna=4;
+        } else {
+            glutBitmapCharacter(GLUT_BITMAP_9_BY_15, texto[i]);
+            coluna++;
+            if((coluna+4)*9 >= w){
+                ++linha;
+                coluna=4;
+            }
+        }
+    }
 }
 
 Vector minWrapVector(Vector a, Vector b){
@@ -108,7 +142,7 @@ void setDamageRate(double val){
 
 void initialize() {
     srand((unsigned) time(NULL));
-    livingUnits = _MAX_NUM_UNITS - 1;
+    livingUnits = _MAX_NUM_UNITS;
 	for(int i=0; i<livingUnits; i++) {
 		Units[i].fMass = 10;
 		Units[i].fInertia = 10;
@@ -318,123 +352,132 @@ void updateSimulation(int _) {
 		setDamageRate(1.6);
 	} else if (isKeyDownNow('9')) {
 		setDamageRate(1000.0);
-	}
-
-
-
-	Units[0].UpdateBodyEuler(dt);
-
-    Units[0].vPosition = getWrapPosition(Units[0].vPosition);
-
-	// calc number of enemy units currently engaging the target
-	Vector d;
-	Units[0].NumFriends = 0;
-	for(int i=1; i<livingUnits; i++) {
-		d = minWrapVector(Units[i].vPosition, Units[0].vPosition);
-		if(d.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) {
-            Units[0].NumFriends++;
-            Units[i].fought = true;
-        }
-	}
-
-	// deduct hit points from target
-	if(Units[0].NumFriends > 0) {
-        double damage = aiDamage * Units[0].NumFriends;
-		Units[0].HitPoints -= damage;
-        playerDamageBalance += damageRate - damage;
-		if(Units[0].HitPoints < 0) {
-			Units[0].vPosition.x = _WINWIDTH/2;
-			Units[0].vPosition.y = _WINHEIGHT/2;
-			Units[0].HitPoints = _MAXHITPOINTS;
-			kill = true;
-		}
-	} else {
-        Units[0].HitPoints = std::min(Units[0].HitPoints+0.01, _MAXHITPOINTS);
-	}
-
-    static double lastHitpoints = -1;
-    if(fabs(lastHitpoints-Units[0].HitPoints) > 10.0){
-        lastHitpoints = Units[0].HitPoints;
-        printf("player hitpoints: %.2lf\n", Units[0].HitPoints);
+	} else if (isKeyDownNow('P') || isKeyDownNow('p')) {
+        estadoExecucao = (estadoExecucao==1)? 2 : 1;
     }
 
-	
-	// update computer controlled units:	
-	for(int i=1; i<livingUnits; i++) {
-		u = minWrapVector(Units[0].vPosition, Units[i].vPosition);
-        bool engaged = u.magnitude() <= Units[0].fLength * _CRITICAL_RADIUS_FACTOR;
+    if(estadoExecucao==2){ // pausado
+        popup("Jogo Pausado");
+    } else if (estadoExecucao==3){ // fim da execução
+        Finalize();
+    } else { // rodando normal
 
-		// handle enemy hitpoints, and learning if required
-		if(engaged) {
-            if(kill) {
-                reTrainTheBrain(Units[i].Inputs, 0.9, 0.1, 0.1);
-                Units[i].HitPoints = std::min(Units[i].HitPoints+_MAXHITPOINTS/4.0f, _MAXHITPOINTS);
-                if(Units[i].HitPoints > _MAXHITPOINTS) Units[i].HitPoints = _MAXHITPOINTS;
+        Units[0].UpdateBodyEuler(dt);
+
+        Units[0].vPosition = getWrapPosition(Units[0].vPosition);
+
+        // calc number of enemy units currently engaging the target
+        Vector d;
+        Units[0].NumFriends = 0;
+        for (int i = 1; i < livingUnits; i++) {
+            d = minWrapVector(Units[i].vPosition, Units[0].vPosition);
+            if (d.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) {
+                Units[0].NumFriends++;
+                Units[i].fought = true;
             }
+        }
 
-			Units[i].HitPoints -= damageRate;
-			if((Units[i].HitPoints < 0)) {
-                printf("player killed an enemy\n");
-                livingUnits -= 1;
-                if(livingUnits > 1) {
-                    Units[i] = Units[livingUnits];
-                } else {
-                    Finalize();
+        // deduct hit points from target
+        if (Units[0].NumFriends > 0) {
+            double damage = aiDamage * Units[0].NumFriends;
+            Units[0].HitPoints -= damage;
+            playerDamageBalance += damageRate - damage;
+            if (Units[0].HitPoints < 0) {
+                Units[0].vPosition.x = _WINWIDTH / 2;
+                Units[0].vPosition.y = _WINHEIGHT / 2;
+                Units[0].HitPoints = _MAXHITPOINTS;
+                kill = true;
+            }
+        } else {
+            Units[0].HitPoints = std::min(Units[0].HitPoints + 0.01, _MAXHITPOINTS);
+        }
+
+        static double lastHitpoints = -1;
+        if (fabs(lastHitpoints - Units[0].HitPoints) > 10.0) {
+            lastHitpoints = Units[0].HitPoints;
+            printf("player hitpoints: %.2lf\n", Units[0].HitPoints);
+        }
+
+
+        // update computer controlled units:
+        for (int i = 1; i < livingUnits; i++) {
+            u = minWrapVector(Units[0].vPosition, Units[i].vPosition);
+            bool engaged = u.magnitude() <= Units[0].fLength * _CRITICAL_RADIUS_FACTOR;
+
+            // handle enemy hitpoints, and learning if required
+            if (engaged) {
+                if (kill) {
+                    reTrainTheBrain(Units[i].Inputs, 0.9, 0.1, 0.1);
+                    Units[i].HitPoints = std::min(Units[i].HitPoints + _MAXHITPOINTS / 4.0f, _MAXHITPOINTS);
+                    if (Units[i].HitPoints > _MAXHITPOINTS) Units[i].HitPoints = _MAXHITPOINTS;
                 }
 
-                reTrainTheBrain(Units[i].Inputs, 0.1, 0.2, 0.9);
-			}
-		} else {
-			Units[i].HitPoints = std::min(Units[i].HitPoints+0.01, _MAXHITPOINTS);
-		}
+                Units[i].HitPoints -= damageRate;
+                if ((Units[i].HitPoints < 0)) {
+                    printf("player killed an enemy\n");
+                    livingUnits -= 1;
+                    if (livingUnits > 1) {
+                        Units[i] = Units[livingUnits];
+                    } else {
+                        estadoExecucao = 2;
+                        popup("YOU WIN!!!");
+                        getchar();
+                        Finalize();
+                    }
 
-		// get a new command
-		Units[i].Inputs[0] = (float)Units[i].NumFriends/livingUnits;
-		Units[i].Inputs[1] = Units[i].HitPoints/_MAXHITPOINTS;
-		Units[i].Inputs[2] = engaged;
-		Units[i].Inputs[3] = u.magnitude()/(sqrt(_WINHEIGHT*_WINHEIGHT + _WINWIDTH*_WINWIDTH)/2);
-		Units[i].Inputs[4] = Units[0].HitPoints/_MAXHITPOINTS;
-		Units[i].Inputs[5] = damageRate/1.6;
+                    reTrainTheBrain(Units[i].Inputs, 0.1, 0.2, 0.9);
+                }
+            } else {
+                Units[i].HitPoints = std::min(Units[i].HitPoints + 0.01, _MAXHITPOINTS);
+            }
 
-        theBrain.setInput(0, Units[i].Inputs[0]);
-        theBrain.setInput(1, Units[i].Inputs[1]);
-        theBrain.setInput(2, Units[i].Inputs[2]);
-        theBrain.setInput(3, Units[i].Inputs[3]);
-        theBrain.setInput(4, Units[i].Inputs[4]);
-        theBrain.setInput(5, Units[i].Inputs[5]);
-        theBrain.feedForward();
+            // get a new command
+            Units[i].Inputs[0] = (float) Units[i].NumFriends / livingUnits;
+            Units[i].Inputs[1] = Units[i].HitPoints / _MAXHITPOINTS;
+            Units[i].Inputs[2] = engaged;
+            Units[i].Inputs[3] = u.magnitude() / (sqrt(_WINHEIGHT * _WINHEIGHT + _WINWIDTH * _WINWIDTH) / 2);
+            Units[i].Inputs[4] = Units[0].HitPoints / _MAXHITPOINTS;
+            Units[i].Inputs[5] = damageRate / 1.6;
 
-		Units[i].Command = theBrain.getMaxOutputID();
-		switch(Units[i].Command) {
-			case chase:
-				Units[i].Chase = true;
-				Units[i].Flock = false;
-				Units[i].Evade = false;
-				break;
+            theBrain.setInput(0, Units[i].Inputs[0]);
+            theBrain.setInput(1, Units[i].Inputs[1]);
+            theBrain.setInput(2, Units[i].Inputs[2]);
+            theBrain.setInput(3, Units[i].Inputs[3]);
+            theBrain.setInput(4, Units[i].Inputs[4]);
+            theBrain.setInput(5, Units[i].Inputs[5]);
+            theBrain.feedForward();
 
-			case flock:
-				Units[i].Chase = false;
-				Units[i].Flock = true;
-				Units[i].Evade = false;
-				break;
+            Units[i].Command = theBrain.getMaxOutputID();
+            switch (Units[i].Command) {
+                case chase:
+                    Units[i].Chase = true;
+                    Units[i].Flock = false;
+                    Units[i].Evade = false;
+                    break;
 
-			case evade:
-				Units[i].Chase = false;
-				Units[i].Flock = false;
-				Units[i].Evade = true;
-				break;
+                case flock:
+                    Units[i].Chase = false;
+                    Units[i].Flock = true;
+                    Units[i].Evade = false;
+                    break;
 
-		}
+                case evade:
+                    Units[i].Chase = false;
+                    Units[i].Flock = false;
+                    Units[i].Evade = true;
+                    break;
 
-		DoUnitAI(i);
-		
-		Units[i].UpdateBodyEuler(dt);
+            }
 
-        Units[i].vPosition = getWrapPosition(Units[i].vPosition);
-	}
+            DoUnitAI(i);
 
-    periodicTrain();
+            Units[i].UpdateBodyEuler(dt);
 
+            Units[i].vPosition = getWrapPosition(Units[i].vPosition);
+        }
+
+        periodicTrain();
+    }
     glutPostRedisplay();
 }
 
