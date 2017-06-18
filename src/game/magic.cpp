@@ -28,7 +28,7 @@
 
 #define _MAXHITPOINTS 100.0
 
-#define _CICLOS_TREINO_PERIODICO 50
+#define _CICLOS_TREINO_PERIODICO 200
 
 // Global Variables:
 RigidBody2D Units[_MAX_NUM_UNITS];
