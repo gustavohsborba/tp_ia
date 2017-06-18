@@ -1,7 +1,9 @@
-#include <cmath>
 #include "RigidBody2D.h"
+#include <cstring>
 
-RigidBody2D::RigidBody2D() {}
+RigidBody2D::RigidBody2D() {
+    memset(Inputs,0,sizeof Inputs);
+}
 
 void RigidBody2D::CalcLoads() {
     Vector Fb;                // stores the sum of forces

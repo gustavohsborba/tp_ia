@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <stdlib.h>
+#include <cstring>
 #include "../neural/NeuralNetwork.h"
 #include "../engine/Cor.h"
 #include "Gui.h"
@@ -14,7 +15,7 @@
 #define _TIMESTEP 0.0045
 #define _SPAWN_AREA_R 300
 
-#define _MAX_NUM_UNITS 2
+#define _MAX_NUM_UNITS 22
 
 #define _UNIT_LENGTH 4
 
@@ -27,6 +28,8 @@
 
 #define _MAXHITPOINTS 100.0
 
+#define _CICLOS_TREINO_PERIODICO 50
+
 // Global Variables:
 RigidBody2D Units[_MAX_NUM_UNITS];
 enum actions{chase, flock, evade};
@@ -36,6 +39,8 @@ bool showVectors=false;
 bool showField=true;
 
 int livingUnits;
+
+float playerDamageBalance = 0.0f;
 
 int GetRandomNumber(int min, int max) {
     int	number;
@@ -53,17 +58,42 @@ Vector minWrapVector(Vector a, Vector b){
     return minWrapVector(a,b,_WINWIDTH, _WINHEIGHT);
 }
 
-float getWrapPosition(float x, float limit){
-    if(x > limit){
-        x -= limit;
-    } else if (x < 0){
-        x += limit;
-    }
-    return x;
+Vector getWrapPosition(Vector v){
+    return getWrapPosition(v, _WINWIDTH, _WINHEIGHT);
 }
 
-Vector getWrapPosition(Vector v){
-    return Vector(getWrapPosition(v.x, _WINWIDTH), getWrapPosition(v.y, _WINHEIGHT), 0.0f);
+void periodicTrain(){
+    static int timer = _CICLOS_TREINO_PERIODICO;
+    timer -= 1;
+    if (timer == 0){
+        timer = _CICLOS_TREINO_PERIODICO;
+
+        if(playerDamageBalance) {
+            printf("Training. Player damage balance: %.2f\n", playerDamageBalance);
+            double inputsAvg[NEURAL_INPUTS];
+            int nContruitors=0;
+            memset(inputsAvg, 0, sizeof inputsAvg);
+
+            for(int i=1; i<livingUnits; ++i){
+                if(Units[i].NumFriends > 0){
+                    nContruitors += 1;
+                    for(int j=0; j<sizeof(inputsAvg)/sizeof(double); ++j){
+                        inputsAvg[j] += Units[i].Inputs[j];
+                    }
+                }
+            }
+            for(int j=0; j<sizeof(inputsAvg)/sizeof(double); ++j){
+                inputsAvg[j] /= nContruitors;
+            }
+
+            if (playerDamageBalance < 0.0f) {
+                reTrainTheBrain(inputsAvg, 0.9, 0.1, 0.1);
+            } else if (playerDamageBalance > 0.0f) {
+                reTrainTheBrain(inputsAvg, 0.1, 0.5, 0.5);
+            }
+            playerDamageBalance = 0.0f;
+        }
+    }
 }
 
 void initialize() {
@@ -220,7 +250,7 @@ void DoUnitAI(int i) {
 }
 
 void updateSimulation(int _) {
-    glutTimerFunc(20, updateSimulation, 0);
+    glutTimerFunc(10, updateSimulation, 0);
 	double dt = _TIMESTEP;
 	Vector u;
 	bool kill = false;
@@ -284,7 +314,9 @@ void updateSimulation(int _) {
 
 	// deduct hit points from target
 	if(Units[0].NumFriends > 0) {
-		Units[0].HitPoints -= 0.2 * Units[0].NumFriends;
+        double damage = 0.2 * Units[0].NumFriends;
+		Units[0].HitPoints -= damage;
+        playerDamageBalance += damageRate - damage;
 		if(Units[0].HitPoints < 0) {
 			Units[0].vPosition.x = _WINWIDTH/2;
 			Units[0].vPosition.y = _WINHEIGHT/2;
@@ -308,7 +340,7 @@ void updateSimulation(int _) {
 		u = minWrapVector(Units[0].vPosition, Units[i].vPosition);
 		if(kill) {				
 			if((u.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) /*&& (Units[i].Command != 2)*/) {
-                reTrainTheBrain(Units[i], 0.9, 0.1, 0.1);
+                reTrainTheBrain(Units[i].Inputs, 0.9, 0.1, 0.1);
 				Units[i].HitPoints = std::min(Units[i].HitPoints+_MAXHITPOINTS/4.0f, _MAXHITPOINTS);
 				if(Units[i].HitPoints > _MAXHITPOINTS) Units[i].HitPoints = _MAXHITPOINTS;
 			}
@@ -326,7 +358,7 @@ void updateSimulation(int _) {
                     Finalize();
                 }
 
-                reTrainTheBrain(Units[i], 0.1, 0.2, 0.9);
+                reTrainTheBrain(Units[i].Inputs, 0.1, 0.2, 0.9);
 			}
 		} else {
 			Units[i].HitPoints = std::min(Units[i].HitPoints+0.01, _MAXHITPOINTS);
@@ -374,6 +406,9 @@ void updateSimulation(int _) {
 
         Units[i].vPosition = getWrapPosition(Units[i].vPosition);
 	}
+
+    periodicTrain();
+
     glutPostRedisplay();
 }
 
