@@ -135,3 +135,17 @@ Vector VRotate2D(float angle, Vector u) {
 
     return Vector(x, y, 0);
 }
+
+float getWrapPosition(float x, float limit){
+	if(x > limit){
+		x -= limit;
+	} else if (x < 0){
+		x += limit;
+	}
+	return x;
+}
+
+Vector getWrapPosition(Vector v, float maxW, float maxH){
+	return Vector(getWrapPosition(v.x, maxW), getWrapPosition(v.y, maxH), 0.0f);
+}
+
