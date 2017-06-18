@@ -61,7 +61,7 @@ public:
 	bool	Flock;
 	bool	Evade;
 
-	double	Inputs[4];
+	double	Inputs[6];
 
 };
 

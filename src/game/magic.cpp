@@ -4,6 +4,7 @@
 #include <time.h>
 #include <algorithm>
 #include <cmath>
+#include <stdlib.h>
 #include "../neural/NeuralNetwork.h"
 #include "../engine/Cor.h"
 #include "Gui.h"
@@ -324,7 +325,8 @@ void updateSimulation(int _) {
 		Units[i].Inputs[1] = (double) (Units[i].HitPoints/_MAXHITPOINTS);
 		Units[i].Inputs[2] = (Units[0].NumFriends>0 ? 1:0);
 		Units[i].Inputs[3] = (u.magnitude()/800.0f);
-
+		//Units[i].Inputs[4] = (double) (Units[0].HitPoints/_MAXHITPOINTS);
+		//Units[i].Inputs[5] = (double) (damageRate/1.6);
 
         theBrain.setInput(0, Units[i].Inputs[0]);
         theBrain.setInput(1, Units[i].Inputs[1]);
