@@ -22,11 +22,11 @@ void keyup_callback(unsigned char key, int x, int y){
     }
 }
 
-bool IsKeyDown(int key) {
+bool isKeyDown(int key) {
     return keys[key];
 }
 
-bool IsKeyDownNow(int key){
+bool isKeyDownNow(int key){
     if(keys[key] & DOWN_NOW){
         keys[key] &= ~DOWN_NOW;
         return true;

@@ -10,7 +10,7 @@
 
 void initGui(int argc, char **argv, void (*drawFuncs)(), void (*updateFunc)(int));
 
-bool IsKeyDown(int key);
-bool IsKeyDownNow(int key);
+bool isKeyDown(int key);
+bool isKeyDownNow(int key);
 
 #endif

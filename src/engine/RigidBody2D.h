@@ -1,13 +1,10 @@
 #ifndef _RIGIDBODY2DHEADER
 #define _RIGIDBODY2DHEADER
 
-#include "mymath.h"
+#include "Vector.h"
 
 #define CONSTANTE_MAROTA 4.0F
 #define	 _THRUSTFORCE				(500.0f*CONSTANTE_MAROTA)
-#define	 _MAXTHRUST					(1000.0f*CONSTANTE_MAROTA)
-#define	 _MINTHRUST					(0.0f*CONSTANTE_MAROTA)
-#define	 _DTHRUST					(0.01f*CONSTANTE_MAROTA)
 #define  _STEERINGFORCE				(500.0f*CONSTANTE_MAROTA)
 #define  _LINEARDRAGCOEFFICIENT		10.5f
 #define  _ANGULARDRAGCOEFFICIENT	2000.0f
@@ -53,7 +50,6 @@ public:
 	void	CalcLoads();
 	void	UpdateBodyEuler(double dt);
 	void	SetThrusters(bool p, bool s, double f);
-	void	ModulateThrust(bool up);
 
 	
 
@@ -66,13 +62,7 @@ public:
 	bool	Evade;
 
 	double	Inputs[4];
-	
-
-	
-
 
 };
-
-Vector	VRotate2D( float angle, Vector u);
 
 #endif

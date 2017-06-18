@@ -3,11 +3,12 @@
 #include <cstdio>
 #include <time.h>
 #include <algorithm>
-#include "NeuralNetwork.h"
-#include "Cor.h"
+#include <cmath>
+#include "../neural/NeuralNetwork.h"
+#include "../engine/Cor.h"
 #include "Gui.h"
-#include "RigidBody2D.h"
-#include "NeuralTrainer.h"
+#include "../engine/RigidBody2D.h"
+#include "../neural/NeuralTrainer.h"
 
 #define _TIMESTEP 0.0045
 #define _SPAWN_AREA_R 300
@@ -49,7 +50,7 @@ Vector minWrapVector(Vector a, Vector b){
     return minWrapVector(a,b,_WINWIDTH, _WINHEIGHT);
 }
 
-void Initialize() {
+void initialize() {
     srand((unsigned) time(NULL));
 	for(int i=0; i<_MAX_NUM_UNITS; i++) {
 		Units[i].fMass = 10;
@@ -83,12 +84,12 @@ void Initialize() {
 	Units[0].HitPoints = _MAXHITPOINTS;
 	Units[0].ThrustForce = _THRUSTFORCE*2;
 
-    InitializeBrain();
-	TrainTheBrain();
+    initializeTheBrain();
+    trainTheBrain();
 }
 
 void Finalize() {
-	EndBrain();
+    endBrain();
 }
 
 void DoUnitAI(int i) {
@@ -113,7 +114,7 @@ void DoUnitAI(int i) {
 				d = minWrapVector(Units[j].vPosition, Units[i].vPosition);
 				w = VRotate2D(-Units[i].fOrientation, d);
 
-				if(d.Magnitude() <= (Units[i].fLength * _LIMITEDVIEW_RADIUS_FACTOR))
+				if(d.magnitude() <= (Units[i].fLength * _LIMITEDVIEW_RADIUS_FACTOR))
                     Units[i].NumFriends++;
 
 				if(Units[i].Flock) {
@@ -125,21 +126,21 @@ void DoUnitAI(int i) {
                 }
 
 				if(InView) {
-					if(d.Magnitude() <= (Units[i].fLength * RadiusFactor)) {
+					if(d.magnitude() <= (Units[i].fLength * RadiusFactor)) {
 						positionAvg += Units[j].vPosition;
 						velocityAvg += Units[j].vVelocity;
 						nProximos++;
 					}
 
 				    // Separation Rule:
-					if(d.Magnitude() <= (Units[i].fLength * _SEPARATION_FACTOR)) {
+					if(d.magnitude() <= (Units[i].fLength * _SEPARATION_FACTOR)) {
 						if(w.x < 0){
                             m = 1;
                         } else if(w.x > 0){
                             m = -1;
                         }
 						
-						steeringForce.x += m*_STEERINGFORCE * (Units[i].fLength * _SEPARATION_FACTOR) / d.Magnitude();
+						steeringForce.x += m*_STEERINGFORCE * (Units[i].fLength * _SEPARATION_FACTOR) / d.magnitude();
 					}
 				}
 			}
@@ -149,9 +150,9 @@ void DoUnitAI(int i) {
 		if(Units[i].Flock && (nProximos > 0)) {
 			positionAvg = positionAvg / nProximos;
 			v = Units[i].vVelocity;
-			v.Normalize();
+            v.normalize();
 			u = minWrapVector(positionAvg, Units[i].vPosition);
-			u.Normalize();
+            u.normalize();
 			w = VRotate2D(-Units[i].fOrientation, u);
 			if(w.x < 0) m = -1;
 			if(w.x > 0) m = 1;
@@ -163,9 +164,9 @@ void DoUnitAI(int i) {
 		if(Units[i].Flock && (nProximos > 0)) {
 			velocityAvg = velocityAvg / nProximos;
 			u = velocityAvg;
-			u.Normalize();
+            u.normalize();
 			v = Units[i].vVelocity;
-			v.Normalize();			
+            v.normalize();
 			w = VRotate2D(-Units[i].fOrientation, u);
 			if(w.x < 0) m = -1;
 			if(w.x > 0) m = 1;
@@ -200,8 +201,8 @@ void DoUnitAI(int i) {
 
 }
 
-void UpdateSimulation(int _) {
-    glutTimerFunc(20, UpdateSimulation, 0);
+void updateSimulation(int _) {
+    glutTimerFunc(20, updateSimulation, 0);
 	double dt = _TIMESTEP;
 	int i;
 	Vector u;
@@ -211,42 +212,42 @@ void UpdateSimulation(int _) {
 	Units[0].SetThrusters(false, false, 1);
 	Units[0].SetThrusters(false, false, 1);
 
-    if(IsKeyDownNow(27)) { //esc
+    if(isKeyDownNow(27)) { //esc
         Finalize();
         exit(0);
     }
-    if (IsKeyDownNow('v')) {
+    if (isKeyDownNow('v')) {
         showVectors = !showVectors;
     }
-	if (IsKeyDownNow('f')) {
+	if (isKeyDownNow('f')) {
 		showField = !showField;
 	}
 
-	if (IsKeyDown('d'))
+	if (isKeyDown('d'))
 		Units[0].SetThrusters(true, false, 0.5);
 
-	if (IsKeyDown('a'))
+	if (isKeyDown('a'))
 		Units[0].SetThrusters(false, true, 0.5);
 
-	if (IsKeyDown('0')) {
+	if (isKeyDown('0')) {
 		damageRate = 0.0;
-	} else if (IsKeyDown('1')) {
+	} else if (isKeyDown('1')) {
 		damageRate = 0.2;
-	} else if (IsKeyDown('2')) {
+	} else if (isKeyDown('2')) {
 		damageRate = 0.4;
-	} else if (IsKeyDown('3')) {
+	} else if (isKeyDown('3')) {
 		damageRate = 0.6;
-	} else if (IsKeyDown('4')) {
+	} else if (isKeyDown('4')) {
 		damageRate = 0.8;
-	} else if (IsKeyDown('5')) {
+	} else if (isKeyDown('5')) {
 		damageRate = 1.0;
-	} else if (IsKeyDown('6')) {
+	} else if (isKeyDown('6')) {
 		damageRate = 1.2;
-	} else if (IsKeyDown('7')) {
+	} else if (isKeyDown('7')) {
 		damageRate = 1.4;
-	} else if (IsKeyDown('8')) {
+	} else if (isKeyDown('8')) {
 		damageRate = 1.6;
-	} else if (IsKeyDown('9')) {
+	} else if (isKeyDown('9')) {
 		damageRate = 1000.0;
 	}
 
@@ -263,7 +264,7 @@ void UpdateSimulation(int _) {
 	Units[0].NumFriends = 0;
 	for(i=1; i<_MAX_NUM_UNITS; i++) {	
 		d = minWrapVector(Units[i].vPosition, Units[0].vPosition);
-		if(d.Magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) {
+		if(d.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) {
             Units[0].NumFriends++;
         }
 	}
@@ -282,26 +283,26 @@ void UpdateSimulation(int _) {
 		//if(Units[0].HitPoints > _MAXHITPOINTS) Units[0].HitPoints = _MAXHITPOINTS;
 	}
 
-    /*static double lastHitpoints = -1;
+    static double lastHitpoints = -1;
     if(lastHitpoints != Units[0].HitPoints){
         lastHitpoints = Units[0].HitPoints;
         printf("player hitpoints: %.0lf\n", Units[0].HitPoints);
-    }*/
+    }
 
 	
 	// update computer controlled units:	
 	for(i=1; i<_MAX_NUM_UNITS; i++) {		
 		u = minWrapVector(Units[0].vPosition, Units[i].vPosition);
 		if(kill) {				
-			if((u.Magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) /*&& (Units[i].Command != 2)*/) {
-				ReTrainTheBrain(Units[i], 0.9, 0.1, 0.1);
+			if((u.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) /*&& (Units[i].Command != 2)*/) {
+                reTrainTheBrain(Units[i], 0.9, 0.1, 0.1);
 				Units[i].HitPoints = std::min(Units[i].HitPoints+_MAXHITPOINTS/4.0f, _MAXHITPOINTS);
 				if(Units[i].HitPoints > _MAXHITPOINTS) Units[i].HitPoints = _MAXHITPOINTS;
 			}
 		}				
 
 		// handle enemy hitpoints, and learning if required
-		if(u.Magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) {
+		if(u.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) {
 			Units[i].HitPoints -= damageRate;
 			if((Units[i].HitPoints < 0)) {
                 printf("player matou inimigo\n");
@@ -309,7 +310,7 @@ void UpdateSimulation(int _) {
 				Units[i].vPosition.y = GetRandomNumber(_WINHEIGHT/2-_SPAWN_AREA_R, _WINHEIGHT/2+_SPAWN_AREA_R);
 				Units[i].HitPoints = _MAXHITPOINTS/2.0;
 //				if(Units[i].Command == chase)
-					ReTrainTheBrain(Units[i], 0.1, 0.4, 0.9);
+                reTrainTheBrain(Units[i], 0.1, 0.2, 0.9);
 			}
 		} else {
 			Units[i].HitPoints = std::min(Units[i].HitPoints+0.01, _MAXHITPOINTS);
@@ -319,16 +320,16 @@ void UpdateSimulation(int _) {
 		Units[i].Inputs[0] = Units[i].NumFriends/_MAX_NUM_UNITS;
 		Units[i].Inputs[1] = (double) (Units[i].HitPoints/_MAXHITPOINTS);
 		Units[i].Inputs[2] = (Units[0].NumFriends>0 ? 1:0);
-		Units[i].Inputs[3] = (u.Magnitude()/800.0f);
-		
-			
-		TheBrain.SetInput(0, Units[i].Inputs[0]);	
-		TheBrain.SetInput(1, Units[i].Inputs[1]);		
-		TheBrain.SetInput(2, Units[i].Inputs[2]);
-		TheBrain.SetInput(3, Units[i].Inputs[3]);			
-		TheBrain.FeedForward();
+		Units[i].Inputs[3] = (u.magnitude()/800.0f);
 
-		Units[i].Command = TheBrain.GetMaxOutputID();
+
+        theBrain.setInput(0, Units[i].Inputs[0]);
+        theBrain.setInput(1, Units[i].Inputs[1]);
+        theBrain.setInput(2, Units[i].Inputs[2]);
+        theBrain.setInput(3, Units[i].Inputs[3]);
+        theBrain.feedForward();
+
+		Units[i].Command = theBrain.getMaxOutputID();
 		switch(Units[i].Command) {
 			case chase:
 				Units[i].Chase = true;
@@ -354,11 +355,8 @@ void UpdateSimulation(int _) {
 		
 		Units[i].UpdateBodyEuler(dt);
 
-		if(Units[i].vPosition.x > _WINWIDTH) Units[i].vPosition.x = 0;
-		if(Units[i].vPosition.x < 0) Units[i].vPosition.x = _WINWIDTH;
-		if(Units[i].vPosition.y > _WINHEIGHT) Units[i].vPosition.y = 0;
-		if(Units[i].vPosition.y < 0) Units[i].vPosition.y = _WINHEIGHT;	
-		
+        Units[i].vPosition.x = std::max(0.0f, std::min((float)_WINWIDTH, Units[i].vPosition.x));
+        Units[i].vPosition.y = std::max(0.0f, std::min((float)_WINHEIGHT, Units[i].vPosition.y));
 	}
     glutPostRedisplay();
 }
