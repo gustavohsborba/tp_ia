@@ -421,7 +421,6 @@ void updateSimulation(int _) {
                     } else {
                         estadoExecucao = 2;
                         popup("YOU WIN!!!");
-                        getchar();
                         Finalize();
                     }
 
