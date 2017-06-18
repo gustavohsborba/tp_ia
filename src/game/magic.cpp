@@ -285,6 +285,19 @@ void updateSimulation(int _) {
 	if (isKeyDown('a'))
 		Units[0].SetThrusters(false, true, 0.5);
 
+
+    if(isKeyDownNow('w')) { //upvelocity
+        Units[0].fInertia = 2;
+        Units[0].fMass = 2;
+        Units[0].ThrustForce = _THRUSTFORCE*5;
+    }
+
+    if(isKeyDownNow('s')) { //donwvelocity
+        Units[0].fInertia = 2;
+        Units[0].fMass = 2;
+        Units[0].ThrustForce = _THRUSTFORCE*2;
+    }
+
 	if (isKeyDownNow('0')) {
 		setDamageRate(0.0);
 	} else if (isKeyDownNow('1')) {
@@ -306,6 +319,7 @@ void updateSimulation(int _) {
 	} else if (isKeyDownNow('9')) {
 		setDamageRate(1000.0);
 	}
+
 
 
 	Units[0].UpdateBodyEuler(dt);
