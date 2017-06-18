@@ -53,6 +53,19 @@ Vector minWrapVector(Vector a, Vector b){
     return minWrapVector(a,b,_WINWIDTH, _WINHEIGHT);
 }
 
+float getWrapPosition(float x, float limit){
+    if(x > limit){
+        x -= limit;
+    } else if (x < 0){
+        x += limit;
+    }
+    return x;
+}
+
+Vector getWrapPosition(Vector v){
+    return Vector(getWrapPosition(v.x, _WINWIDTH), getWrapPosition(v.y, _WINHEIGHT), 0.0f);
+}
+
 void initialize() {
     srand((unsigned) time(NULL));
     livingUnits = _MAX_NUM_UNITS;
@@ -257,8 +270,7 @@ void updateSimulation(int _) {
 
 	Units[0].UpdateBodyEuler(dt);
 
-    Units[0].vPosition.x = std::max(0.0f, std::min((float)_WINWIDTH, Units[0].vPosition.x));
-    Units[0].vPosition.y = std::max(0.0f, std::min((float)_WINHEIGHT, Units[0].vPosition.y));
+    Units[0].vPosition = getWrapPosition(Units[0].vPosition);
 
 	// calc number of enemy units currently engaging the target
 	Vector d;
@@ -360,8 +372,7 @@ void updateSimulation(int _) {
 		
 		Units[i].UpdateBodyEuler(dt);
 
-        Units[i].vPosition.x = std::max(0.0f, std::min((float)_WINWIDTH, Units[i].vPosition.x));
-        Units[i].vPosition.y = std::max(0.0f, std::min((float)_WINHEIGHT, Units[i].vPosition.y));
+        Units[i].vPosition = getWrapPosition(Units[i].vPosition);
 	}
     glutPostRedisplay();
 }
