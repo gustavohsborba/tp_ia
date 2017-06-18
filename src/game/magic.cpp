@@ -35,6 +35,7 @@ RigidBody2D Units[_MAX_NUM_UNITS];
 enum actions{chase, flock, evade};
 
 double damageRate = 0.4;
+double aiDamage = 0.2;
 bool showVectors=false;
 bool showField=true;
 
@@ -75,21 +76,25 @@ void periodicTrain(){
             memset(inputsAvg, 0, sizeof inputsAvg);
 
             for(int i=1; i<livingUnits; ++i){
-                if(Units[i].NumFriends > 0){
+                if(Units[i].fought){
+                    Units[i].fought = false;
                     nContruitors += 1;
                     for(int j=0; j<sizeof(inputsAvg)/sizeof(double); ++j){
                         inputsAvg[j] += Units[i].Inputs[j];
                     }
                 }
             }
-            for(int j=0; j<sizeof(inputsAvg)/sizeof(double); ++j){
-                inputsAvg[j] /= nContruitors;
-            }
+            if(nContruitors) {
+                for (int j = 0; j < sizeof(inputsAvg) / sizeof(double); ++j) {
+                    inputsAvg[j] /= nContruitors;
+                }
 
-            if (playerDamageBalance < 0.0f) {
-                reTrainTheBrain(inputsAvg, 0.9, 0.1, 0.1);
-            } else if (playerDamageBalance > 0.0f) {
-                reTrainTheBrain(inputsAvg, 0.1, 0.5, 0.5);
+                if (playerDamageBalance < 0.0f) {
+                    reTrainTheBrain(inputsAvg, 0.9, 0.1, 0.1);
+                } else {
+                    printf("%lf %lf %lf %lf %lf %lf#\n", inputsAvg[0], inputsAvg[1], inputsAvg[2], inputsAvg[3], inputsAvg[4], inputsAvg[5]);
+                    reTrainTheBrain(inputsAvg, 0.1, 0.5, 0.5);
+                }
             }
             playerDamageBalance = 0.0f;
         }
@@ -255,7 +260,7 @@ void DoUnitAI(int i) {
 }
 
 void updateSimulation(int _) {
-    glutTimerFunc(10, updateSimulation, 0);
+    glutTimerFunc(1, updateSimulation, 0);
 	double dt = _TIMESTEP;
 	Vector u;
 	bool kill = false;
@@ -314,12 +319,13 @@ void updateSimulation(int _) {
 		d = minWrapVector(Units[i].vPosition, Units[0].vPosition);
 		if(d.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) {
             Units[0].NumFriends++;
+            Units[i].fought = true;
         }
 	}
 
 	// deduct hit points from target
 	if(Units[0].NumFriends > 0) {
-        double damage = 0.2 * Units[0].NumFriends;
+        double damage = aiDamage * Units[0].NumFriends;
 		Units[0].HitPoints -= damage;
         playerDamageBalance += damageRate - damage;
 		if(Units[0].HitPoints < 0) {
@@ -329,8 +335,7 @@ void updateSimulation(int _) {
 			kill = true;
 		}
 	} else {
-		//Units[0].HitPoints += 1;
-		//if(Units[0].HitPoints > _MAXHITPOINTS) Units[0].HitPoints = _MAXHITPOINTS;
+        Units[0].HitPoints = std::min(Units[0].HitPoints+0.01, _MAXHITPOINTS);
 	}
 
     static double lastHitpoints = -1;
@@ -343,16 +348,16 @@ void updateSimulation(int _) {
 	// update computer controlled units:	
 	for(int i=1; i<livingUnits; i++) {
 		u = minWrapVector(Units[0].vPosition, Units[i].vPosition);
-		if(kill) {				
-			if((u.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) /*&& (Units[i].Command != 2)*/) {
-                reTrainTheBrain(Units[i].Inputs, 0.9, 0.1, 0.1);
-				Units[i].HitPoints = std::min(Units[i].HitPoints+_MAXHITPOINTS/4.0f, _MAXHITPOINTS);
-				if(Units[i].HitPoints > _MAXHITPOINTS) Units[i].HitPoints = _MAXHITPOINTS;
-			}
-		}				
+        bool engaged = u.magnitude() <= Units[0].fLength * _CRITICAL_RADIUS_FACTOR;
 
 		// handle enemy hitpoints, and learning if required
-		if(u.magnitude() <= (Units[0].fLength * _CRITICAL_RADIUS_FACTOR)) {
+		if(engaged) {
+            if(kill) {
+                reTrainTheBrain(Units[i].Inputs, 0.9, 0.1, 0.1);
+                Units[i].HitPoints = std::min(Units[i].HitPoints+_MAXHITPOINTS/4.0f, _MAXHITPOINTS);
+                if(Units[i].HitPoints > _MAXHITPOINTS) Units[i].HitPoints = _MAXHITPOINTS;
+            }
+
 			Units[i].HitPoints -= damageRate;
 			if((Units[i].HitPoints < 0)) {
                 printf("player killed an enemy\n");
@@ -371,11 +376,11 @@ void updateSimulation(int _) {
 
 		// get a new command
 		Units[i].Inputs[0] = (float)Units[i].NumFriends/livingUnits;
-		Units[i].Inputs[1] = (double) (Units[i].HitPoints/_MAXHITPOINTS);
-		Units[i].Inputs[2] = (Units[0].NumFriends>0 ? 1:0);
-		Units[i].Inputs[3] = (u.magnitude()/800.0f);
-		Units[i].Inputs[4] = (double) (Units[0].HitPoints/_MAXHITPOINTS);
-		Units[i].Inputs[5] = (double) (damageRate/1.6);
+		Units[i].Inputs[1] = Units[i].HitPoints/_MAXHITPOINTS;
+		Units[i].Inputs[2] = engaged;
+		Units[i].Inputs[3] = u.magnitude()/(sqrt(_WINHEIGHT*_WINHEIGHT + _WINWIDTH*_WINWIDTH)/2);
+		Units[i].Inputs[4] = Units[0].HitPoints/_MAXHITPOINTS;
+		Units[i].Inputs[5] = damageRate/1.6;
 
         theBrain.setInput(0, Units[i].Inputs[0]);
         theBrain.setInput(1, Units[i].Inputs[1]);

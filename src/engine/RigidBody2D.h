@@ -51,8 +51,7 @@ public:
 	void	UpdateBodyEuler(double dt);
 	void	SetThrusters(bool p, bool s, double f);
 
-	
-
+    bool fought = false;
 	double	HitPoints;
 	int		NumFriends;
 
