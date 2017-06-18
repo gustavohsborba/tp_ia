@@ -96,6 +96,11 @@ void periodicTrain(){
     }
 }
 
+void setDamageRate(double val){
+    damageRate = val;
+    printf("damage rate: %lf\n", val);
+}
+
 void initialize() {
     srand((unsigned) time(NULL));
     livingUnits = _MAX_NUM_UNITS;
@@ -275,26 +280,26 @@ void updateSimulation(int _) {
 	if (isKeyDown('a'))
 		Units[0].SetThrusters(false, true, 0.5);
 
-	if (isKeyDown('0')) {
-		damageRate = 0.0;
-	} else if (isKeyDown('1')) {
-		damageRate = 0.2;
-	} else if (isKeyDown('2')) {
-		damageRate = 0.4;
-	} else if (isKeyDown('3')) {
-		damageRate = 0.6;
-	} else if (isKeyDown('4')) {
-		damageRate = 0.8;
-	} else if (isKeyDown('5')) {
-		damageRate = 1.0;
-	} else if (isKeyDown('6')) {
-		damageRate = 1.2;
-	} else if (isKeyDown('7')) {
-		damageRate = 1.4;
-	} else if (isKeyDown('8')) {
-		damageRate = 1.6;
-	} else if (isKeyDown('9')) {
-		damageRate = 1000.0;
+	if (isKeyDownNow('0')) {
+		setDamageRate(0.0);
+	} else if (isKeyDownNow('1')) {
+		setDamageRate(0.2);
+	} else if (isKeyDownNow('2')) {
+		setDamageRate(0.4);
+	} else if (isKeyDownNow('3')) {
+		setDamageRate(0.6);
+	} else if (isKeyDownNow('4')) {
+		setDamageRate(0.8);
+	} else if (isKeyDownNow('5')) {
+		setDamageRate(1.0);
+	} else if (isKeyDownNow('6')) {
+		setDamageRate(1.2);
+	} else if (isKeyDownNow('7')) {
+		setDamageRate(1.4);
+	} else if (isKeyDownNow('8')) {
+		setDamageRate(1.6);
+	} else if (isKeyDownNow('9')) {
+		setDamageRate(1000.0);
 	}
 
 
@@ -329,7 +334,7 @@ void updateSimulation(int _) {
 	}
 
     static double lastHitpoints = -1;
-    if(lastHitpoints != Units[0].HitPoints){
+    if(fabs(lastHitpoints-Units[0].HitPoints) > 10.0){
         lastHitpoints = Units[0].HitPoints;
         printf("player hitpoints: %.2lf\n", Units[0].HitPoints);
     }
