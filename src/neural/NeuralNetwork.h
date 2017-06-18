@@ -9,6 +9,9 @@ public:
     NeuralNetworkLayer InputLayer;
     NeuralNetworkLayer HiddenLayer;
     NeuralNetworkLayer OutputLayer;
+    int nNodesInput;
+    int nNodesOutput;
+    int nNodesHidden;
 
     void initialize(int nNodesInput, int nNodesHidden, int nNodesOutput);
     void cleanUp();

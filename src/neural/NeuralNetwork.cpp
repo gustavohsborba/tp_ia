@@ -29,7 +29,9 @@ void NeuralNetwork::initialize(int nNodesInput, int nNodesHidden, int nNodesOutp
     OutputLayer.NumberOfChildNodes = 0;
     OutputLayer.NumberOfParentNodes = nNodesHidden;
     OutputLayer.initialize(nNodesOutput, &HiddenLayer, NULL);
-
+    this->nNodesHidden = nNodesHidden;
+    this->nNodesInput = nNodesInput;
+    this->nNodesOutput = nNodesOutput;
 }
 
 void NeuralNetwork::cleanUp() {

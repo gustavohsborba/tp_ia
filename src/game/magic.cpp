@@ -369,13 +369,15 @@ void updateSimulation(int _) {
 		Units[i].Inputs[1] = (double) (Units[i].HitPoints/_MAXHITPOINTS);
 		Units[i].Inputs[2] = (Units[0].NumFriends>0 ? 1:0);
 		Units[i].Inputs[3] = (u.magnitude()/800.0f);
-		//Units[i].Inputs[4] = (double) (Units[0].HitPoints/_MAXHITPOINTS);
-		//Units[i].Inputs[5] = (double) (damageRate/1.6);
+		Units[i].Inputs[4] = (double) (Units[0].HitPoints/_MAXHITPOINTS);
+		Units[i].Inputs[5] = (double) (damageRate/1.6);
 
         theBrain.setInput(0, Units[i].Inputs[0]);
         theBrain.setInput(1, Units[i].Inputs[1]);
         theBrain.setInput(2, Units[i].Inputs[2]);
         theBrain.setInput(3, Units[i].Inputs[3]);
+        theBrain.setInput(4, Units[i].Inputs[4]);
+        theBrain.setInput(5, Units[i].Inputs[5]);
         theBrain.feedForward();
 
 		Units[i].Command = theBrain.getMaxOutputID();
