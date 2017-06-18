@@ -1,11 +1,12 @@
 # Boids Neural
 Um jogo parecido com boids que utiliza uma rede neural para decidir a acao dos boids
-baseado no exemplo 14 do livro 'AI For Game Developers - David M. Bourg, Glenn Seeman'
+baseado no exemplo 14 do livro 'AI For Game Developers - David M. Bourg, Glenn Seeman'.
 
 [Tarefas](#todo)
-[Instalando o OpenGL](#instalando)
-[Atualizando Cmake no linux e Ubuntu](#atualizando)
-[Compilando e executando o projeto](#compilando)
+
+[Requisitos](#requisitos)
+
+[Execução](#execução)
 
  # TODO:
  -     [ ] Colocar um objetivo no jogo (ex matar todo mundo)
@@ -14,23 +15,22 @@ baseado no exemplo 14 do livro 'AI For Game Developers - David M. Bourg, Glenn S
  -     [ ] Preparar a apresentacao
  -     [ ] Re treinar a rede neural a cada período de tempo, e não só quando um cara morre.
  
- # EXTRAS: 
+ ## EXTRAS: 
  -     [ ] Colocar menu, menu de pausa e tela de 'voce ganhou'
  -     [ ] Criar uma versão sem jogador (com dois times)
  -     [ ] Colocar o poder de ataque do jogador como entrada da rede neural
 
-
-# Instalando o OpenGL(Glut)
+# Requisitos
 
 ## Atualizando Cmake no linux e Ubuntu
 
 1. Remova a versao atual
-```
+```bash
 sudo apt-get purge cmake
 ```
 
 2. Va a pagina oficila [CMake webpage](https://cmake.org/download/) e baixe a ultima versao.
-```
+```bash
 mkdir ~/temp
 cd ~/temp
 wget https://cmake.org/files/v3.9/cmake-3.9.0-rc3.tar.gz
@@ -39,7 +39,7 @@ cd cmake-3.9.0-rc3
 ```
 
 3. Instalando e rodando o script:
-```
+```bash
 ./bootstrap
 make -j4
 sudo make install
@@ -50,7 +50,7 @@ cp -r share /usr/
 ```
 
 4. Teste a nova versao do cmake.
-```
+```bash
 cmake --version
 ```
 
@@ -61,19 +61,21 @@ cmake version 3.9.0-rc3
 CMake suite maintained and supported by Kitware (kitware.com/cmake).
 ```
 
-6. Instalando o freeglut.
-```
+## Instalando o OpenGL(Glut)
+
+1. Instalando o freeglut.
+```bash
 sudo apt-get install freeglut3 freeglut3-dev
 ```
 
-# Compilando o projeto
+# Execução
 Na pasta raiz do projeto
 
-```
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make
-$ ./tp_final
+```bash
+mkdir build
+cd build
+cmake ..
+make
+./tp_final
 ```
 
