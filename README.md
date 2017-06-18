@@ -1,9 +1,11 @@
 # Boids Neural
-um jogo parecido com boids que utiliza uma rede neural para decidir a acao dos boids
+Um jogo parecido com boids que utiliza uma rede neural para decidir a acao dos boids
 baseado no exemplo 14 do livro 'AI For Game Developers - David M. Bourg, Glenn Seeman'
- 
+
 [Tarefas](#todo)
-[Instalando]
+[Instalando o OpenGL](#instalando)
+[Atualizando Cmake no linux e Ubuntu](#atualizando)
+[Compilando e executando o projeto](#compilando)
 
  # TODO:
  -     [ ] Colocar um objetivo no jogo (ex matar todo mundo)
@@ -11,7 +13,7 @@ baseado no exemplo 14 do livro 'AI For Game Developers - David M. Bourg, Glenn S
  -     [ ] Preparar o texto
  -     [ ] Preparar a apresentacao
  -     [ ] Re treinar a rede neural a cada período de tempo, e não só quando um cara morre.
- -
+ 
  # EXTRAS: 
  -     [ ] Colocar menu, menu de pausa e tela de 'voce ganhou'
  -     [ ] Criar uma versão sem jogador (com dois times)
@@ -64,9 +66,13 @@ sudo apt-get install freeglut3 freeglut3-dev
 ```
 
 # Compilando o projeto
+Na pasta raiz do projeto
+
 ```
-Na pasta raiz
-mkdir build
-cd build
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+$ ./tp_final
 ```
 
