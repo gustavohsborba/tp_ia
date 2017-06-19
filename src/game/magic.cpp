@@ -34,14 +34,14 @@
 // Global Variables:
 RigidBody2D Units[_MAX_NUM_UNITS];
 enum actions{chase, flock, evade};
+enum exec_states{running,paused,finished};
 
 double damageRate = 0.4;
 double aiDamage = 0.2;
 bool showVectors=false;
 bool showField=true;
 
-// ESTADO EXECUCAO: 1=Rodando, 2=Pausado, 3=Finalizado
-int estadoExecucao = 1;
+int executionState = running;
 
 int livingUnits;
 
@@ -60,7 +60,7 @@ int GetRandomNumber(int min, int max) {
 }
 
 void popup(const char *texto){
-    const int x=3*_WINWIDTH/8,w=_WINWIDTH/4,y=3*_WINWIDTH/8,h=_WINWIDTH/4;
+    const int x=3*_WINWIDTH/8,w=_WINWIDTH/4,y=3*_WINHEIGHT/8,h=_WINHEIGHT/4;
     glColor3ub(63,127,63);
     glBegin(GL_QUADS);
     glVertex2i(x,y);
@@ -306,64 +306,61 @@ void updateSimulation(int _) {
     if(isKeyDownNow(27)) { //esc
         Finalize();
     }
-    if (isKeyDownNow('v')) {
-        showVectors = !showVectors;
-    }
-	if (isKeyDownNow('f')) {
-		showField = !showField;
-	}
 
-	if (isKeyDown('d'))
-		Units[0].SetThrusters(true, false, 0.5);
-
-	if (isKeyDown('a'))
-		Units[0].SetThrusters(false, true, 0.5);
-
-
-    if(isKeyDownNow('w')) { //upvelocity
-        Units[0].fInertia = 2;
-        Units[0].fMass = 2;
-        Units[0].ThrustForce = _THRUSTFORCE*5;
+    if (isKeyDownNow('P') || isKeyDownNow('p')) {
+        executionState = executionState==finished? finished : executionState==running? paused : running;
     }
 
-    if(isKeyDownNow('s')) { //donwvelocity
-        Units[0].fInertia = 2;
-        Units[0].fMass = 2;
-        Units[0].ThrustForce = _THRUSTFORCE*2;
-    }
+    if(executionState == running){
+        if (isKeyDownNow('v')) {
+            showVectors = !showVectors;
+        }
+        if (isKeyDownNow('f')) {
+            showField = !showField;
+        }
 
-	if (isKeyDownNow('0')) {
-		setDamageRate(0.0);
-	} else if (isKeyDownNow('1')) {
-		setDamageRate(0.2);
-	} else if (isKeyDownNow('2')) {
-		setDamageRate(0.4);
-	} else if (isKeyDownNow('3')) {
-		setDamageRate(0.6);
-	} else if (isKeyDownNow('4')) {
-		setDamageRate(0.8);
-	} else if (isKeyDownNow('5')) {
-		setDamageRate(1.0);
-	} else if (isKeyDownNow('6')) {
-		setDamageRate(1.2);
-	} else if (isKeyDownNow('7')) {
-		setDamageRate(1.4);
-	} else if (isKeyDownNow('8')) {
-		setDamageRate(1.6);
-	} else if (isKeyDownNow('9')) {
-		setDamageRate(1000.0);
-	} else if (isKeyDownNow('P') || isKeyDownNow('p')) {
-        estadoExecucao = (estadoExecucao==1)? 2 : 1;
-    }
+        if (isKeyDown('d'))
+            Units[0].SetThrusters(true, false, 0.5);
 
-    if(estadoExecucao==2){ // pausado
-        popup("Jogo Pausado");
-    } else if (estadoExecucao==3){ // fim da execução
-        Finalize();
-    } else { // rodando normal
+        if (isKeyDown('a'))
+            Units[0].SetThrusters(false, true, 0.5);
+
+
+        if(isKeyDownNow('w')) { //upvelocity
+            Units[0].fInertia = 2;
+            Units[0].fMass = 2;
+            Units[0].ThrustForce = _THRUSTFORCE*5;
+        }
+
+        if(isKeyDownNow('s')) { //donwvelocity
+            Units[0].fInertia = 2;
+            Units[0].fMass = 2;
+            Units[0].ThrustForce = _THRUSTFORCE*2;
+        }
+
+        if (isKeyDownNow('0')) {
+            setDamageRate(0.0);
+        } else if (isKeyDownNow('1')) {
+            setDamageRate(0.2);
+        } else if (isKeyDownNow('2')) {
+            setDamageRate(0.4);
+        } else if (isKeyDownNow('3')) {
+            setDamageRate(0.6);
+        } else if (isKeyDownNow('4')) {
+            setDamageRate(0.8);
+        } else if (isKeyDownNow('5')) {
+            setDamageRate(1.0);
+        } else if (isKeyDownNow('6')) {
+            setDamageRate(1.2);
+        } else if (isKeyDownNow('7')) {
+            setDamageRate(1.4);
+        } else if (isKeyDownNow('8')) {
+            setDamageRate(1.6);
+        } else if (isKeyDownNow('9')) {
+            setDamageRate(1000.0);
+        }
 
         Units[0].UpdateBodyEuler(dt);
-
         Units[0].vPosition = getWrapPosition(Units[0].vPosition);
 
         // calc number of enemy units currently engaging the target
@@ -419,9 +416,7 @@ void updateSimulation(int _) {
                     if (livingUnits > 1) {
                         Units[i] = Units[livingUnits];
                     } else {
-                        estadoExecucao = 2;
-                        popup("YOU WIN!!!");
-                        Finalize();
+                        executionState = finished;
                     }
 
                     reTrainTheBrain(Units[i].Inputs, 0.1, 0.2, 0.9);
@@ -595,16 +590,23 @@ void DrawCraft(RigidBody2D craft, Cor clr) {
 void drawCrafts() {
 	glClearColor(.1,.1,.1,1);
     glClear(GL_COLOR_BUFFER_BIT);
-    for (int i = 0; i < livingUnits; i++) {
-        if (i == 0) {
-            DrawCraft(Units[i], Cor(255, 255, 255));
-        } else if (Units[i].Command == chase)
-            DrawCraft(Units[i], Cor(255, 0, 0));
-        else if (Units[i].Command == flock)
-            DrawCraft(Units[i], Cor(0, 0, 255));
-        else if (Units[i].Command == evade)
-            DrawCraft(Units[i], Cor(128, 128, 0));
-    }
+    if(executionState == finished) {
+        popup("YOU WIN!!!");
+    } else {
+        for (int i = 0; i < livingUnits; i++) {
+            if (i == 0) {
+                DrawCraft(Units[i], Cor(255, 255, 255));
+            } else if (Units[i].Command == chase)
+                DrawCraft(Units[i], Cor(255, 0, 0));
+            else if (Units[i].Command == flock)
+                DrawCraft(Units[i], Cor(0, 0, 255));
+            else if (Units[i].Command == evade)
+                DrawCraft(Units[i], Cor(128, 128, 0));
+        }
 
+        if (executionState == paused) {
+            popup("game paused");
+        }
+    }
     glutSwapBuffers();
 }
