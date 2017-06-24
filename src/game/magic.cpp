@@ -16,7 +16,7 @@
 #define _TIMESTEP 0.0045
 #define _SPAWN_AREA_R 300
 
-#define _MAX_NUM_UNITS 2
+#define _MAX_NUM_UNITS 17
 
 #define _UNIT_LENGTH 4
 

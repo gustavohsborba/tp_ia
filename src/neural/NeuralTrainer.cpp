@@ -94,8 +94,8 @@ void reTrainTheBrain(const double inputs[], double d0, double d1, double d2) {
 }
 
 void initializeTheBrain() {
-    theBrain.initialize(NEURAL_INPUTS, 3, 3);
-    theBrain.setLearningRate(0.2);
+    theBrain.initialize(NEURAL_INPUTS, NEURAL_INPUTS*2, 3);
+    theBrain.setLearningRate(0.15);
     theBrain.setMomentum(true, 0.9);
 }
 
